@@ -704,6 +704,28 @@ public class Solo {
     }
 
     /**
+     * Click on any View with given text. Will scroll if necessary
+     * 
+     * @param name
+     *            The name/text to search for. This <strong>will</strong> be interpreted as a regular expression
+     */
+    public void clickOn(String name) {
+        clicker.clickOnAny(name, true);
+    }
+
+    /**
+     * Click on any View with given text.
+     * 
+     * @param name
+     *            The name/text to search for. This <strong>will</strong> be interpreted as a regular expression
+     * @param scroll
+     *            {@code true} if scrolling is allowed to search for View
+     */
+    public void clickOn(String name, boolean scroll) {
+        clicker.clickOnAny(name, scroll);
+    }
+
+    /**
      * Clicks on a Button with a given text. Will automatically scroll when needed.
      * 
      * @param name
