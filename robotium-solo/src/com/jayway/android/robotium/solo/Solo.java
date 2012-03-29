@@ -118,7 +118,7 @@ public class Solo {
         this.robotiumUtils = new RobotiumUtils(instrumentation, sleeper);
         this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter);
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
-        this.textEnterer = new TextEnterer(instrumentation);
+        this.textEnterer = new TextEnterer(instrumentation, clicker);
     }
 
     /**
@@ -1204,7 +1204,7 @@ public class Solo {
      * @param year
      *            the year e.g. 2011
      * @param monthOfYear
-     *            the month which is starting from zero e.g. 03
+     *            the month which starts from zero e.g. 0 for January
      * @param dayOfMonth
      *            the day e.g. 10
      * 
@@ -1222,7 +1222,7 @@ public class Solo {
      * @param year
      *            the year e.g. 2011
      * @param monthOfYear
-     *            the month e.g. 03
+     *            the month which starts from zero e.g. 03 for April
      * @param dayOfMonth
      *            the day e.g. 10
      * 
@@ -1325,7 +1325,7 @@ public class Solo {
     }
 
     /**
-     * Enters text into an EditText with a given index.
+     * Enters text in an EditText with a given index.
      * 
      * @param index
      *            the index of the {@link EditText}. {@code 0} if only one is available
@@ -1339,7 +1339,7 @@ public class Solo {
     }
 
     /**
-     * Enters text into a given EditText.
+     * Enters text in a given EditText.
      * 
      * @param editText
      *            the {@link EditText} to enter text into
@@ -1351,6 +1351,35 @@ public class Solo {
     public void enterText(EditText editText, String text) {
         waiter.waitForView(editText, SMALLTIMEOUT);
         textEnterer.setEditText(editText, text);
+    }
+
+    /**
+     * Types text in an EditText with a given index.
+     * 
+     * @param index
+     *            the index of the {@link EditText}. {@code 0} if only one is available
+     * @param text
+     *            the text string to type in the {@link EditText} field
+     * 
+     */
+
+    public void typeText(int index, String text) {
+        textEnterer.typeText(waiter.waitForAndGetView(index, EditText.class), text);
+    }
+
+    /**
+     * Types text in a given EditText.
+     * 
+     * @param editText
+     *            the {@link EditText} to type text in
+     * @param text
+     *            the text string to type in the {@link EditText} field
+     * 
+     */
+
+    public void typeText(EditText editText, String text) {
+        waiter.waitForView(editText, SMALLTIMEOUT);
+        textEnterer.typeText(editText, text);
     }
 
     /**
