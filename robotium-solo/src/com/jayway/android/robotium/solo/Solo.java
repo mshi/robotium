@@ -80,8 +80,9 @@ public class Solo {
     private final Waiter waiter;
     private final Setter setter;
     private final Getter getter;
-    private final int TIMEOUT = 20000;
-    private final int SMALLTIMEOUT = 10000;
+    private final static int TIMEOUT = 20000;
+    private final static int SMALLTIMEOUT = 10000;
+    private final static int SPIN_WAIT = 500;
     public final static int LANDSCAPE = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE; // 0
     public final static int PORTRAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; // 1
     public final static int RIGHT = KeyEvent.KEYCODE_DPAD_RIGHT;
@@ -1050,6 +1051,7 @@ public class Solo {
      */
 
     public ArrayList<TextView> clickInList(int line) {
+        scrollToTop();
         return clicker.clickInList(line);
     }
 
@@ -1065,6 +1067,7 @@ public class Solo {
      */
 
     public ArrayList<TextView> clickInList(int line, int index) {
+        scrollToTop();
         return clicker.clickInList(line, index, false, 0);
     }
 
@@ -1077,6 +1080,7 @@ public class Solo {
      * 
      */
     public ArrayList<TextView> clickLongInList(int line) {
+        scrollToTop();
         return clicker.clickInList(line, 0, true, 0);
     }
 
@@ -1091,6 +1095,7 @@ public class Solo {
      * 
      */
     public ArrayList<TextView> clickLongInList(int line, int index) {
+        scrollToTop();
         return clicker.clickInList(line, index, true, 0);
     }
 
@@ -1107,6 +1112,7 @@ public class Solo {
      * 
      */
     public ArrayList<TextView> clickLongInList(int line, int index, int time) {
+        scrollToTop();
         return clicker.clickInList(line, index, true, time);
     }
 
@@ -1154,6 +1160,18 @@ public class Solo {
     public boolean scrollUp() {
         waiter.waitForViews(AbsListView.class, ScrollView.class);
         return scroller.scroll(Scroller.UP);
+    }
+
+    public void scrollToTop() {
+        while (scrollUp()) {
+            sleeper.sleep(SPIN_WAIT);
+        }
+    }
+
+    public void scrollToBottom() {
+        while (scrollDown()) {
+            sleeper.sleep(SPIN_WAIT);
+        }
     }
 
     /**

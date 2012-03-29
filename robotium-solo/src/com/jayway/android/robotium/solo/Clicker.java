@@ -82,6 +82,7 @@ class Clicker {
         long eventTime = SystemClock.uptimeMillis();
         MotionEvent event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, 0);
         MotionEvent event2 = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_UP, x, y, 0);
+        Log.i(LOG_TAG, String.format("Clicking at: %f, %f", x, y));
         try {
             inst.sendPointerSync(event);
             inst.sendPointerSync(event2);
@@ -158,6 +159,7 @@ class Clicker {
         int[] xy = new int[2];
 
         view.getLocationOnScreen(xy);
+        Log.i(LOG_TAG, String.format("View is at: %d, %d", xy[0], xy[1]));
 
         final int viewWidth = view.getWidth();
         final int viewHeight = view.getHeight();
@@ -366,7 +368,7 @@ class Clicker {
     }
 
     /**
-     * Clicks on a certain list line and returns the {@link TextView}s that the list line is showing. Will use the first list it finds.
+     * Clicks on a certain list line and returns the {@link TextView}s that the list line is showing. Will use the first list it finds. Will scroll if necessary
      * 
      * @param line
      *            the line that should be clicked
@@ -374,7 +376,25 @@ class Clicker {
      */
 
     public ArrayList<TextView> clickInList(int line) {
-        return clickInList(line, 0, false, 0);
+        return clickInList(line, 0, false, 0, true);
+    }
+
+    /**
+     * Clicks on a certain list line on a specified List and returns the {@link TextView}s that the list line is showing. Will scroll if necessary
+     * 
+     * @param line
+     *            the line that should be clicked
+     * @param index
+     *            the index of the list. E.g. Index 1 if two lists are available
+     * @param longClick
+     *            whether or not to long click
+     * @param time
+     *            duration of longClick
+     * @return an {@code ArrayList} of the {@code TextView}s located in the list line
+     */
+
+    public ArrayList<TextView> clickInList(int line, int index, boolean longClick, int time) {
+        return clickInList(line, index, longClick, time, true);
     }
 
     /**
@@ -384,10 +404,16 @@ class Clicker {
      *            the line that should be clicked
      * @param index
      *            the index of the list. E.g. Index 1 if two lists are available
+     * @param longClick
+     *            whether or not to long click
+     * @param time
+     *            duration of longClick
+     * @param scroll
+     *            whether scrolling should be done to click the view
      * @return an {@code ArrayList} of the {@code TextView}s located in the list line
      */
 
-    public ArrayList<TextView> clickInList(int line, int index, boolean longClick, int time) {
+    public ArrayList<TextView> clickInList(int line, int index, boolean longClick, int time, boolean scroll) {
         line--;
         if (line < 0)
             line = 0;
@@ -399,9 +425,13 @@ class Clicker {
 
         View view = listView.getChildAt(line);
         if (view != null) {
+            Log.i(LOG_TAG, "Found the view");
             views = viewFetcher.getViews(view, true);
             views = RobotiumUtils.removeInvisibleViews(views);
             clickOnScreen(view, longClick, time);
+        } else if (scroll && scroller.scroll(Scroller.DOWN)) {
+            Log.i(LOG_TAG, "Didn't find the view. Going to scroll");
+            clickInList(line, index, longClick, time, scroll);
         }
         return RobotiumUtils.filterViews(TextView.class, views);
     }
