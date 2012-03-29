@@ -59,6 +59,7 @@ import android.widget.ToggleButton;
  * 
  * 
  * @author Renas Reda, renas.reda@jayway.com
+ * @modified Michael Shi, mshi@zynga.com
  * 
  */
 
@@ -529,6 +530,10 @@ public class Solo {
 
     public boolean searchText(String text, int minimumNumberOfMatches, boolean scroll, boolean onlyVisible) {
         return searcher.searchWithTimeoutFor(TextView.class, text, minimumNumberOfMatches, scroll, onlyVisible);
+    }
+
+    public boolean searchTextAfter(String text, String after, int minimumNumberOfMatches, boolean scroll, boolean onlyVisible) {
+        return searcher.searchWithTimeoutFor(TextView.class, text, after, minimumNumberOfMatches, scroll, onlyVisible);
     }
 
     /**
@@ -1538,6 +1543,23 @@ public class Solo {
 
     public TextView getText(String text, boolean onlyVisible, boolean useRegex, int match) {
         return getter.getView(TextView.class, text, onlyVisible, useRegex, match);
+    }
+
+    /**
+     * Returns a TextView which shows a given text that appears after {@code String}.
+     * 
+     * @param text
+     *            the text that is shown
+     * @param onlyVisible
+     *            {@code true} if only visible texts on the screen should be returned
+     * @param match
+     *            which occurrence should be returned (1 for first occurrence)
+     * @param searchAfter
+     *            the text where the search should start. {@code null} to start from beginning
+     * @return the {@link TextView} that shows the given text
+     */
+    public TextView getText(String text, boolean onlyVisible, boolean useRegex, int match, String searchAfter) {
+        return getter.getView(TextView.class, text, onlyVisible, useRegex, match, searchAfter);
     }
 
     /**

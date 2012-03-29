@@ -22,6 +22,7 @@ import android.widget.ToggleButton;
  * Contains various click methods. Examples are: clickOn(), clickOnText(), clickOnScreen().
  * 
  * @author Renas Reda, renas.reda@jayway.com
+ * @modified Michael Shi, mshi@zynga.com
  * 
  */
 
