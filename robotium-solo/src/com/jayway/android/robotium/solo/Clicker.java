@@ -35,6 +35,7 @@ class Clicker {
     private final RobotiumUtils robotiumUtils;
     private final Sleeper sleeper;
     private final Waiter waiter;
+    private final Searcher searcher;
     private final int TIMEOUT = 10000;
     private final int MINISLEEP = 100;
     Set<TextView> uniqueTextViews;
@@ -64,6 +65,20 @@ class Clicker {
         this.inst = inst;
         this.sleeper = sleeper;
         this.waiter = waiter;
+        this.searcher = null;
+        uniqueTextViews = new HashSet<TextView>();
+    }
+
+    public Clicker(ViewFetcher viewFetcher, Scroller scroller, RobotiumUtils robotiumUtils, Instrumentation inst, Sleeper sleeper, Waiter waiter,
+            Searcher searcher) {
+
+        this.viewFetcher = viewFetcher;
+        this.scroller = scroller;
+        this.robotiumUtils = robotiumUtils;
+        this.inst = inst;
+        this.sleeper = sleeper;
+        this.waiter = waiter;
+        this.searcher = searcher;
         uniqueTextViews = new HashSet<TextView>();
     }
 
@@ -436,4 +451,42 @@ class Clicker {
         return RobotiumUtils.filterViews(TextView.class, views);
     }
 
+    /**
+     * Clicks on a view that has an unattached text. (TextView below or above the view)
+     * 
+     * @param viewClass
+     *            what kind of {@code View} to click, e.g. {@code Button.class} or {@code ImageView.class}
+     * @param nameRegex
+     *            the name of the view presented to the user. The parameter <strong>will</strong> be interpreted as a regular expression.
+     * @param locationOfText
+     *            {@code ABOVE} for text floating above the {@code View}. {@code BELOW} for text floating below the {@code View}
+     */
+    public <T extends View> void clickOnUnattached(Class<T> viewClass, String nameRegex, int locationOfText) {
+        final ArrayList<View> views = searcher.searchWithTimeoutFor(TextView.class, nameRegex, 1, true, true) ? viewFetcher.getViews(null, true) : viewFetcher
+                .getAllViews(null);
+        final Pattern pattern = Pattern.compile(nameRegex);
+        boolean found = false;
+        View target = null;
+        for (View view : views) {
+            if (viewClass.isAssignableFrom(view.getClass())) {
+                target = view;
+                if (found && locationOfText == Constants.LOCATION_ABOVE) {
+                    break;
+                }
+            } else if (view instanceof TextView) {
+                if (pattern.matcher(((TextView) view).getText().toString()).matches()) {
+                    found = true;
+                    if (locationOfText == Constants.LOCATION_BELOW) {
+                        break;
+                    }
+                }
+            }
+        }
+        if (found) {
+            clickOnScreen(target);
+        } else {
+            Assert.assertTrue(String.format("%s with the text [%s] floating %s is not found !", viewClass.getSimpleName(), nameRegex,
+                    (locationOfText == Constants.LOCATION_ABOVE) ? "above" : "below"), false);
+        }
+    }
 }

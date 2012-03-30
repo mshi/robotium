@@ -82,7 +82,6 @@ public class Solo {
     private final Getter getter;
     private final static int TIMEOUT = 20000;
     private final static int SMALLTIMEOUT = 10000;
-    private final static int SPIN_WAIT = 500;
     public final static int LANDSCAPE = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE; // 0
     public final static int PORTRAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; // 1
     public final static int RIGHT = KeyEvent.KEYCODE_DPAD_RIGHT;
@@ -94,6 +93,8 @@ public class Solo {
     public final static int DELETE = KeyEvent.KEYCODE_DEL;
     public final static int CLOSED = 0;
     public final static int OPENED = 1;
+    public final static int LOCATION_ABOVE = Constants.LOCATION_ABOVE;
+    public final static int LOCATION_BELOW = Constants.LOCATION_BELOW;
 
     /**
      * Constructor that takes in the instrumentation and the start activity.
@@ -108,7 +109,7 @@ public class Solo {
     public Solo(Instrumentation instrumentation, Activity activity) {
         this.sleeper = new Sleeper();
         this.activityUtils = new ActivityUtils(instrumentation, activity, sleeper);
-        this.viewFetcher = new ViewFetcher(activityUtils);
+        this.viewFetcher = new ViewFetcher(activityUtils, sleeper);
         this.dialogUtils = new DialogUtils(viewFetcher, sleeper);
         this.scroller = new Scroller(instrumentation, activityUtils, viewFetcher, sleeper);
         this.searcher = new Searcher(viewFetcher, scroller, sleeper);
@@ -118,9 +119,10 @@ public class Solo {
         this.asserter = new Asserter(activityUtils, waiter);
         this.checker = new Checker(viewFetcher, waiter);
         this.robotiumUtils = new RobotiumUtils(instrumentation, sleeper);
-        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter);
+        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher);
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
         this.textEnterer = new TextEnterer(instrumentation, clicker);
+        this.viewFetcher.setScroller(this.scroller);
     }
 
     /**
@@ -1162,18 +1164,19 @@ public class Solo {
         return scroller.scroll(Scroller.UP);
     }
 
+    /**
+     * Scroll to top of current view
+     */
     public void scrollToTop() {
-        while (scrollUp()) {
-            sleeper.sleep(SPIN_WAIT);
-        }
+        scroller.scrollToTop();
     }
 
+    /**
+     * Scroll to bottom of current view
+     */
     public void scrollToBottom() {
-        while (scrollDown()) {
-            sleeper.sleep(SPIN_WAIT);
-        }
+        scroller.scrollToBottom();
     }
-
     /**
      * Scrolls down a list with a given index.
      * 
@@ -1734,6 +1737,20 @@ public class Solo {
      * @return an {@code ArrayList} of the {@link TextView} objects currently shown in the focused window
      * 
      */
+    public ArrayList<TextView> getCurrentTextViews() {
+        return viewFetcher.getCurrentViews(TextView.class, null);
+    }
+
+    /**
+     * Returns an ArrayList of the TextView objects currently shown in the focused Activity or Dialog.
+     * 
+     * @param parent
+     *            the parent {@link View} from which the {@link TextView} objects should be returned. {@code null} if all TextView objects from the currently
+     *            focused window e.g. Activity should be returned
+     * 
+     * @return an {@code ArrayList} of the {@link TextView} objects currently shown in the focused window
+     * 
+     */
 
     public ArrayList<TextView> getCurrentTextViews(View parent) {
         return viewFetcher.getCurrentViews(TextView.class, parent);
@@ -2098,4 +2115,59 @@ public class Solo {
         activityUtils.finishOpenedActivities();
     }
 
+    /**
+     * Ensures that the {@code View} is visible and not null
+     * 
+     * @param id
+     *            The id that represents the view to find
+     */
+    public void ensureVisible(int id) {
+
+    }
+
+    /**
+     * Returns an ArrayList of the all unique View objects contained in the parent View. Scrolling is required to get all the views. This is not a cheap call.
+     * 
+     * @return an {@code ArrayList} of the {@link View} objects contained in the given {@code View}
+     * 
+     */
+    public final ArrayList<View> getAllViews() {
+        return viewFetcher.getAllViews(null);
+    }
+
+    /**
+     * Returns an ArrayList of the all unique View objects contained in the parent View. Scrolling is required to get all the views. This is not a cheap call.
+     * 
+     * @param parent
+     *            the parent view from which to return the views
+     * @return an {@code ArrayList} of the {@link View} objects contained in the given {@code View}
+     * 
+     */
+    public final ArrayList<View> getAllViews(View parent) {
+        return viewFetcher.getAllViews(parent);
+    }
+
+    public final <T extends View> ArrayList<T> getAllViews(Class<T> viewClass) {
+        return viewFetcher.getAllViews(viewClass, null);
+    }
+
+    public final <T extends View> ArrayList<T> getAllViews(Class<T> viewClass, View parent) {
+        return viewFetcher.getAllViews(viewClass, parent);
+    }
+
+    public final ArrayList<ListView> getAllListViews() {
+        return viewFetcher.getAllViews(ListView.class, null);
+    }
+
+    public void clickOnUnattachedButton(String name, int locationOfText) {
+        clicker.clickOnUnattached(Button.class, name, locationOfText);
+    }
+
+    public void clickOnUnattachedImageButton(String name, int locationOfText) {
+        clicker.clickOnUnattached(ImageButton.class, name, locationOfText);
+    }
+
+    public void clickOnUnattachedToggleButton(String name, int locationOfText) {
+        clicker.clickOnUnattached(ToggleButton.class, name, locationOfText);
+    }
 }
