@@ -3,6 +3,7 @@ package com.jayway.android.robotium.solo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -10,6 +11,7 @@ import android.app.Instrumentation.ActivityMonitor;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AbsListView;
@@ -1182,6 +1184,17 @@ public class Solo {
 
     public void drag(float fromX, float toX, float fromY, float toY, int stepCount) {
         scroller.drag(fromX, toX, fromY, toY, stepCount);
+    }
+
+    /**
+     * Simulate touching a given location and dragging it to a new location based on given steps. First element in list is starting point.
+     * 
+     * @param steps
+     *            list of {@link Pair} that represents (x,y) coordinates to drag across
+     */
+
+    public void drag(final List<Pair<Float, Float>> steps) {
+        scroller.drag(steps);
     }
 
     /**

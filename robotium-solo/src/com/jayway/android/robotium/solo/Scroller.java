@@ -1,9 +1,11 @@
 package com.jayway.android.robotium.solo;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AbsListView;
@@ -57,6 +59,38 @@ class Scroller {
     }
 
     /**
+     * Simulate touching a given location and dragging it to a new location based on given steps. First element in list is starting point.
+     * 
+     * @param steps
+     *            list of {@link Pair} that represents (x,y) coordinates to drag across
+     */
+
+    public void drag(final List<Pair<Float, Float>> steps) {
+        final long downTime = SystemClock.uptimeMillis();
+        long eventTime = SystemClock.uptimeMillis();
+
+        final Pair<Float, Float> start = steps.get(0);
+        final Pair<Float, Float> end = steps.get(steps.size() - 1);
+
+        MotionEvent event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, start.first, start.second, 0);
+        inst.sendPointerSync(event);
+        inst.waitForIdleSync();
+
+        for (Pair<Float, Float> coord : steps) {
+            eventTime = SystemClock.uptimeMillis();
+            event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_MOVE, coord.first, coord.second, 0);
+            inst.sendPointerSync(event);
+            inst.waitForIdleSync();
+        }
+
+        eventTime = SystemClock.uptimeMillis();
+        event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_UP, end.first, end.second, 0);
+        inst.sendPointerSync(event);
+        inst.waitForIdleSync();
+
+    }
+
+    /**
      * Simulate touching a specific location and dragging to a new location.
      * 
      * This method was copied from {@code TouchUtils.java} in the Android Open Source Project, and modified here.
@@ -75,33 +109,22 @@ class Scroller {
      */
 
     public void drag(float fromX, float toX, float fromY, float toY, int stepCount) {
-        long downTime = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis();
+        final List<Pair<Float, Float>> steps = new ArrayList<Pair<Float, Float>>(stepCount + 2);
         float y = fromY;
         float x = fromX;
+
         float yStep = (toY - fromY) / stepCount;
         float xStep = (toX - fromX) / stepCount;
-        MotionEvent event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, fromX, fromY, 0);
-        try {
-            inst.sendPointerSync(event);
-        } catch (SecurityException ignored) {
-        }
+
+        steps.add(Pair.create(x, y));
+
         for (int i = 0; i < stepCount; ++i) {
             y += yStep;
             x += xStep;
-            eventTime = SystemClock.uptimeMillis();
-            event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_MOVE, x, y, 0);
-            try {
-                inst.sendPointerSync(event);
-            } catch (SecurityException ignored) {
-            }
+            steps.add(Pair.create(x, y));
         }
-        eventTime = SystemClock.uptimeMillis();
-        event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_UP, toX, toY, 0);
-        try {
-            inst.sendPointerSync(event);
-        } catch (SecurityException ignored) {
-        }
+        steps.add(Pair.create(x, y));
+        drag(steps);
     }
 
     /**
