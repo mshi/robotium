@@ -2157,6 +2157,15 @@ public class Solo {
     }
 
     /**
+     * All inactive activities are finished.
+     * 
+     */
+
+    public void finishInactiveActivities() {
+        activityUtils.finishInactiveActivities();
+    }
+
+    /**
      * 
      * All activities that have been active are finished.
      * 
