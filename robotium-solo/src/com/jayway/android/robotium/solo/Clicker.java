@@ -13,10 +13,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 /**
  * Contains various click methods. Examples are: clickOn(), clickOnText(), clickOnScreen().
@@ -324,16 +322,32 @@ class Clicker {
      *            whether to scroll to find the regex
      */
     public <T extends TextView> void clickOnAny(String nameRegex, boolean scroll) {
+        final Pattern pattern = Pattern.compile(nameRegex);
+        waiter.waitForText(nameRegex, 0, TIMEOUT, true, true);
         ArrayList<View> views = viewFetcher.getCurrentViews(View.class);
         views = RobotiumUtils.removeInvisibleViews(views);
+        T viewToClick = null;
         for (View v : views) {
             if (v instanceof TextView) {
-                clickOnText(nameRegex, false, 1, scroll, 0);
-            } else if (v instanceof Button) {
-                clickOn(Button.class, nameRegex);
-            } else if (v instanceof ToggleButton) {
-                clickOn(ToggleButton.class, nameRegex);
+                T tv = (T) v;
+                if (pattern.matcher(tv.getText()).matches()) {
+                    viewToClick = tv;
+                    if (viewToClick.isShown())
+                        break;
+                }
             }
+        }
+        if (viewToClick != null) {
+            clickOnScreen(viewToClick);
+        } else if (scroll && scroller.scroll(Scroller.DOWN)) {
+            clickOnAny(nameRegex, scroll);
+        } else {
+            for (View view : views) {
+                if (view instanceof TextView) {
+                    Log.d(LOG_TAG, nameRegex + " not found. Have found: " + ((TextView) view).getText());
+                }
+            }
+            Assert.assertTrue("View with the text: " + nameRegex + " is not found!", false);
         }
     }
 

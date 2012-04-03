@@ -1,11 +1,15 @@
 package com.jayway.android.robotium.solo;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.app.Instrumentation.ActivityMonitor;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AbsListView;
@@ -80,8 +84,10 @@ public class Solo {
     private final Waiter waiter;
     private final Setter setter;
     private final Getter getter;
+    private final ExtensionUtils extUtils;
     private final static int TIMEOUT = 20000;
     private final static int SMALLTIMEOUT = 10000;
+    private final static String LOG_TAG = "Robotium";
     public final static int LANDSCAPE = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE; // 0
     public final static int PORTRAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; // 1
     public final static int RIGHT = KeyEvent.KEYCODE_DPAD_RIGHT;
@@ -123,6 +129,32 @@ public class Solo {
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
         this.textEnterer = new TextEnterer(instrumentation, clicker);
         this.viewFetcher.setScroller(this.scroller);
+        this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils);
+    }
+
+    public Solo(Instrumentation instrumentation, Activity activity, final BaseExtensionUtils extensionUtils) {
+        this.sleeper = new Sleeper();
+        this.activityUtils = new ActivityUtils(instrumentation, activity, sleeper);
+        this.viewFetcher = new ViewFetcher(activityUtils, sleeper);
+        this.dialogUtils = new DialogUtils(viewFetcher, sleeper);
+        this.scroller = new Scroller(instrumentation, activityUtils, viewFetcher, sleeper);
+        this.searcher = new Searcher(viewFetcher, scroller, sleeper);
+        this.waiter = new Waiter(activityUtils, viewFetcher, searcher, scroller, sleeper);
+        this.setter = new Setter(activityUtils);
+        this.getter = new Getter(activityUtils, viewFetcher, waiter);
+        this.asserter = new Asserter(activityUtils, waiter);
+        this.checker = new Checker(viewFetcher, waiter);
+        this.robotiumUtils = new RobotiumUtils(instrumentation, sleeper);
+        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher);
+        this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
+        this.textEnterer = new TextEnterer(instrumentation, clicker);
+        this.viewFetcher.setScroller(this.scroller);
+        this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils) {
+            @Override
+            public final Bitmap takeScreenShot(final Activity activity) {
+                return extensionUtils.takeScreenShot(activity);
+            }
+        };
     }
 
     /**
@@ -365,6 +397,21 @@ public class Solo {
     }
 
     /**
+     * Searches for a text string in the EditText objects currently shown and returns true if found. Will automatically scroll when needed.
+     * 
+     * @param text
+     *            the text to search for
+     * @param timeout
+     *            milliseconds to timeout for
+     * @return {@code true} if an {@link EditText} with the given text is found or {@code false} if it is not found
+     * 
+     */
+
+    public boolean searchEditText(String text, int timeout) {
+        return searcher.searchWithTimeoutFor(EditText.class, text, 1, true, false, timeout);
+    }
+
+    /**
      * Searches for a Button with the given text string and returns true if at least one Button is found. Will automatically scroll when needed.
      * 
      * @param text
@@ -533,6 +580,10 @@ public class Solo {
 
     public boolean searchText(String text, int minimumNumberOfMatches, boolean scroll, boolean onlyVisible) {
         return searcher.searchWithTimeoutFor(TextView.class, text, minimumNumberOfMatches, scroll, onlyVisible);
+    }
+
+    public boolean searchText(String text, int minimumNumberOfMatches, boolean scroll, boolean onlyVisible, int timeout) {
+        return searcher.searchWithTimeoutFor(TextView.class, text, minimumNumberOfMatches, scroll, onlyVisible, timeout);
     }
 
     public boolean searchTextAfter(String text, String after, int minimumNumberOfMatches, boolean scroll, boolean onlyVisible) {
@@ -1657,7 +1708,7 @@ public class Solo {
      * @return a {@link View} with a given class and index
      */
 
-    public <T extends View> View getView(Class<T> viewClass, int index) {
+    public <T extends View> T getView(Class<T> viewClass, int index) {
         return waiter.waitForAndGetView(index, viewClass);
     }
 
@@ -2169,5 +2220,166 @@ public class Solo {
 
     public void clickOnUnattachedToggleButton(String name, int locationOfText) {
         clicker.clickOnUnattached(ToggleButton.class, name, locationOfText);
+    }
+
+    /**
+     * Gets cache of the test project. i.e this project
+     * 
+     * @return Returns the cache of the local project
+     */
+    public final File getTestCache() {
+        return extUtils.getTestCache();
+    }
+
+    /**
+     * Gets the cache of the project that is being tested on. e.g. Scramble
+     * 
+     * @return Cache directory of remote project
+     */
+    public final File getActivityCache() {
+        return extUtils.getActivityCache();
+    }
+
+    /**
+     * Returns the screenshots path where all screenshots should be stored
+     * 
+     * @return screenshots path
+     */
+    public final String getScreenshotsPath() {
+        return extUtils.getScreenshotsPath();
+    }
+
+    /**
+     * Take screenshot of the current screen
+     * 
+     * @return
+     */
+    public final Bitmap takeScreenShot() {
+        return extUtils.takeScreenShot();
+    }
+
+    /**
+     * Take screenshot of {@code activity}
+     * 
+     * @param activity
+     *            Activity to take screenshot of
+     * @return Bitmap representing the screenshot
+     */
+    public Bitmap takeScreenShot(final Activity activity) {
+        return extUtils.takeScreenShot(activity);
+    }
+
+    /**
+     * Take screenshot of {@code view}
+     * 
+     * @param view
+     *            View to take screenshot of
+     * @return Bitmap representing the screenshot
+     */
+    public final Bitmap takeScreenShot(final View view) {
+        return extUtils.takeScreenShot(view);
+    }
+
+    /**
+     * Save the {@code drawable} as {@code name}.jpg in local cache directory
+     * 
+     * @param drawable
+     *            Drawable to save
+     * @param name
+     *            Name of file to save as
+     * @throws IOException
+     */
+    public void saveDrawable(final Drawable drawable, final String name) throws IOException {
+        extUtils.saveDrawable(drawable, name);
+    }
+
+    /**
+     * Save the {@code bitmap} to local file in cache directory as {@code name}.jpg
+     * 
+     * @param bitmap
+     *            Bitmap to save
+     * @param name
+     *            Name of the file to save as
+     * @throws IOException
+     */
+    public void saveBitmap(final Bitmap bitmap, final String name) throws IOException {
+        extUtils.saveBitmap(bitmap, name);
+    }
+
+    /**
+     * Take screenshot of the {@code activity} and save it as {@code name}.jpg in cache directory
+     * 
+     * @param activity
+     *            Activity to take screenshot of
+     * @param name
+     *            Name of file to be saved
+     * @return
+     * @throws Exception
+     */
+    public final Bitmap takeScreenShotAndSave(final Activity activity, final String name) throws IOException {
+        return extUtils.takeScreenShotAndSave(activity, name);
+    }
+
+    /**
+     * Take screenshot of the {@code view} and save it as {@code name}.jpg in the cache directory
+     * 
+     * @param view
+     *            View to take screenshot of
+     * @param name
+     *            Name of the file to be saved
+     * @return Returns a Bitmap representation of the current view (screenshot)
+     * @throws Exception
+     */
+    public final Bitmap takeScreenShotAndSave(final View view, final String name) throws IOException {
+        return extUtils.takeScreenShotAndSave(view, name);
+    }
+
+    /**
+     * Function that fails the current test and logs it in logcat and takes screenshot
+     * 
+     * @param msg
+     *            Meaningful message to describe what is expected and what happened
+     */
+    public void fail(String msg) {
+        extUtils.fail(msg, true, "fail");
+    }
+
+    /**
+     * Function that fails the current test and logs it in logcat with option to take screenshot
+     * 
+     * @param msg
+     *            Meaningful message to describe what is expected and what happened
+     * @param screenshot
+     *            {@code true} if screenshot should be taken
+     */
+    public void fail(String msg, boolean screenshot) {
+        extUtils.fail(msg, screenshot, "fail");
+    }
+
+    /**
+     * Function that fails the current test and logs it in logcat and takes screenshot
+     * 
+     * @param msg
+     *            Meaningful message to describe what is expected and what happened
+     * @param name
+     *            name of the screenshot
+     */
+    public void fail(String msg, String name) {
+        extUtils.fail(msg, true, name);
+    }
+
+    /**
+     * Function that fails the current test and logs it in logcat with option to take screenshot
+     * 
+     * @param msg
+     *            Meaningful message to describe what is expected and what happened
+     * @param screenshot
+     *            {@code true} if screenshot should be taken
+     * @param name
+     *            name of filename of screenshot if screenshot is selected
+     */
+
+    public void fail(String msg, boolean screenshot, String name) {
+        extUtils.fail(msg, screenshot, name);
     }
 }

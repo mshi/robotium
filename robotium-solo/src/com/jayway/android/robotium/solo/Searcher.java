@@ -67,7 +67,32 @@ class Searcher {
 
     public boolean searchWithTimeoutFor(final Class<? extends TextView> viewClass, final String regex, final int expectedMinimumNumberOfMatches,
             final boolean scroll, final boolean onlyVisible) {
-        return searchWithTimeoutFor(viewClass, regex, null, expectedMinimumNumberOfMatches, scroll, onlyVisible);
+        return searchWithTimeoutFor(viewClass, regex, null, expectedMinimumNumberOfMatches, scroll, onlyVisible, -1);
+    }
+
+    /**
+     * Searches for a {@code View} with the given regex string and returns {@code true} if the searched {@code Button} is found a given number of times. Will
+     * automatically scroll when needed.
+     * 
+     * @param viewClass
+     *            what kind of {@code View} to search for, e.g. {@code Button.class} or {@code TextView.class}
+     * @param regex
+     *            the text to search for. The parameter <strong>will</strong> be interpreted as a regular expression.
+     * @param expectedMinimumNumberOfMatches
+     *            the minimum number of matches expected to be found. {@code 0} matches means that one or more matches are expected to be found
+     * @param scroll
+     *            whether scrolling should be performed
+     * @param onlyVisible
+     *            {@code true} if only texts visible on the screen should be searched
+     * @param timeout
+     *            milliseconds to timeout the search
+     * @return {@code true} if a {@code View} of the specified class with the given text is found a given number of times, and {@code false} if it is not found
+     * 
+     */
+
+    public boolean searchWithTimeoutFor(final Class<? extends TextView> viewClass, final String regex, final int expectedMinimumNumberOfMatches,
+            final boolean scroll, final boolean onlyVisible, final int timeout) {
+        return searchWithTimeoutFor(viewClass, regex, null, expectedMinimumNumberOfMatches, scroll, onlyVisible, timeout);
     }
 
     /**
@@ -93,7 +118,35 @@ class Searcher {
 
     public boolean searchWithTimeoutFor(final Class<? extends TextView> viewClass, final String regex, final String after,
             final int expectedMinimumNumberOfMatches, final boolean scroll, final boolean onlyVisible) {
-        final long endTime = System.currentTimeMillis() + TIMEOUT;
+        return searchWithTimeoutFor(viewClass, regex, after, expectedMinimumNumberOfMatches, scroll, onlyVisible, -1);
+    }
+
+    /**
+     * Searches for a {@code View} with the given regex string and returns {@code true} if the searched {@code Button} is found a given number of times and
+     * occurs after {@code String}. Will automatically scroll when needed.
+     * 
+     * @param viewClass
+     *            what kind of {@code View} to search for, e.g. {@code Button.class} or {@code TextView.class}
+     * @param regex
+     *            the text to search for. The parameter <strong>will</strong> be interpreted as a regular expression.
+     * @param after
+     *            the text to start the search at. {@code null} to search from beginning
+     * @param expectedMinimumNumberOfMatches
+     *            the minimum number of matches expected to be found. {@code 0} matches means that one or more matches are expected to be found
+     * @param scroll
+     *            whether scrolling should be performed
+     * @param onlyVisible
+     *            {@code true} if only texts visible on the screen should be searched
+     * @param timeout
+     *            milliseconds to timeout
+     * 
+     * @return {@code true} if a {@code View} of the specified class with the given text is found a given number of times, and {@code false} if it is not found
+     * 
+     */
+
+    public boolean searchWithTimeoutFor(final Class<? extends TextView> viewClass, final String regex, final String after,
+            final int expectedMinimumNumberOfMatches, final boolean scroll, final boolean onlyVisible, final int timeout) {
+        final long endTime = System.currentTimeMillis() + (timeout != -1 ? timeout : TIMEOUT);
 
         while (System.currentTimeMillis() < endTime) {
             sleeper.sleep();
