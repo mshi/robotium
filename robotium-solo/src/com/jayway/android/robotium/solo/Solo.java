@@ -107,6 +107,17 @@ public class Solo {
     public Solo(Instrumentation instrumentation, Activity activity, final BaseExtensionUtils extensionUtils) {
         this.sleeper = new Sleeper();
         this.activityUtils = new ActivityUtils(instrumentation, activity, sleeper);
+        if (extensionUtils != null) {
+            this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils) {
+                @Override
+                public final Bitmap takeScreenShot(final Activity activity) { // leaving room for AndEngine screenshots
+                    return extensionUtils.takeScreenShot(activity);
+                }
+            };
+        } else {
+            this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils);
+        }
+        Assert.ExtensionUtils = this.extUtils;
         this.viewFetcher = new ViewFetcher(activityUtils, sleeper);
         this.dialogUtils = new DialogUtils(viewFetcher, sleeper);
         this.scroller = new Scroller(instrumentation, activityUtils, viewFetcher, sleeper);
@@ -121,16 +132,6 @@ public class Solo {
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
         this.textEnterer = new TextEnterer(instrumentation, clicker);
         this.viewFetcher.setScroller(this.scroller);
-        if (extensionUtils != null) {
-            this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils) {
-                @Override
-                public final Bitmap takeScreenShot(final Activity activity) { // leaving room for AndEngine screenshots
-                    return extensionUtils.takeScreenShot(activity);
-                }
-            };
-        } else {
-            this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils);
-        }
     }
 
     public Solo(Instrumentation instrumentation, final BaseExtensionUtils extensionUtils) {
@@ -162,6 +163,16 @@ public class Solo {
 
     public Solo(Instrumentation instrumentation) {
         this(instrumentation, null, null);
+    }
+
+    /**
+     * Choose whether to turn on/off screenshot capture when assertion fails. Default is false.
+     * 
+     * @param enable
+     *            {@code true} to enable screenshot captures on assertion fails
+     */
+    public void enableAssertionScreenshot(boolean enable) {
+        Constants.SCREENSHOT_ASSERTS = enable;
     }
 
     /**

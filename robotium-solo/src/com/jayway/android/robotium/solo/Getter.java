@@ -3,7 +3,6 @@ package com.jayway.android.robotium.solo;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import junit.framework.Assert;
 import android.app.Activity;
 import android.view.View;
 import android.widget.TextView;

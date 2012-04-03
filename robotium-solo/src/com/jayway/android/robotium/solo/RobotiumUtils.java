@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
 import android.app.Instrumentation;
 import android.view.KeyEvent;
 import android.view.View;

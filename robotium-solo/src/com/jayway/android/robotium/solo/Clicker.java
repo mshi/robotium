@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
 import android.app.Instrumentation;
 import android.os.SystemClock;
 import android.util.Log;
