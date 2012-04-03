@@ -38,6 +38,18 @@ class Clicker {
     private final int MINISLEEP = 100;
     Set<TextView> uniqueTextViews;
 
+    public Clicker(ViewFetcher viewFetcher, Scroller scroller, RobotiumUtils robotiumUtils, Instrumentation inst, Sleeper sleeper, Waiter waiter,
+            Searcher searcher) {
+        this.viewFetcher = viewFetcher;
+        this.scroller = scroller;
+        this.robotiumUtils = robotiumUtils;
+        this.inst = inst;
+        this.sleeper = sleeper;
+        this.waiter = waiter;
+        this.searcher = searcher;
+        uniqueTextViews = new HashSet<TextView>();
+    }
+
     /**
      * Constructs this object.
      * 
@@ -56,28 +68,7 @@ class Clicker {
      */
 
     public Clicker(ViewFetcher viewFetcher, Scroller scroller, RobotiumUtils robotiumUtils, Instrumentation inst, Sleeper sleeper, Waiter waiter) {
-
-        this.viewFetcher = viewFetcher;
-        this.scroller = scroller;
-        this.robotiumUtils = robotiumUtils;
-        this.inst = inst;
-        this.sleeper = sleeper;
-        this.waiter = waiter;
-        this.searcher = null;
-        uniqueTextViews = new HashSet<TextView>();
-    }
-
-    public Clicker(ViewFetcher viewFetcher, Scroller scroller, RobotiumUtils robotiumUtils, Instrumentation inst, Sleeper sleeper, Waiter waiter,
-            Searcher searcher) {
-
-        this.viewFetcher = viewFetcher;
-        this.scroller = scroller;
-        this.robotiumUtils = robotiumUtils;
-        this.inst = inst;
-        this.sleeper = sleeper;
-        this.waiter = waiter;
-        this.searcher = searcher;
-        uniqueTextViews = new HashSet<TextView>();
+        this(viewFetcher, scroller, robotiumUtils, inst, sleeper, waiter, null);
     }
 
     /**

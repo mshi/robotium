@@ -102,36 +102,6 @@ public class Solo {
     public final static int LOCATION_ABOVE = Constants.LOCATION_ABOVE;
     public final static int LOCATION_BELOW = Constants.LOCATION_BELOW;
 
-    /**
-     * Constructor that takes in the instrumentation and the start activity.
-     * 
-     * @param instrumentation
-     *            the {@link Instrumentation} instance
-     * @param activity
-     *            the start {@link Activity} or {@code null} if no start activity is provided
-     * 
-     */
-
-    public Solo(Instrumentation instrumentation, Activity activity) {
-        this.sleeper = new Sleeper();
-        this.activityUtils = new ActivityUtils(instrumentation, activity, sleeper);
-        this.viewFetcher = new ViewFetcher(activityUtils, sleeper);
-        this.dialogUtils = new DialogUtils(viewFetcher, sleeper);
-        this.scroller = new Scroller(instrumentation, activityUtils, viewFetcher, sleeper);
-        this.searcher = new Searcher(viewFetcher, scroller, sleeper);
-        this.waiter = new Waiter(activityUtils, viewFetcher, searcher, scroller, sleeper);
-        this.setter = new Setter(activityUtils);
-        this.getter = new Getter(activityUtils, viewFetcher, waiter);
-        this.asserter = new Asserter(activityUtils, waiter);
-        this.checker = new Checker(viewFetcher, waiter);
-        this.robotiumUtils = new RobotiumUtils(instrumentation, sleeper);
-        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher);
-        this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
-        this.textEnterer = new TextEnterer(instrumentation, clicker);
-        this.viewFetcher.setScroller(this.scroller);
-        this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils);
-    }
-
     public Solo(Instrumentation instrumentation, Activity activity, final BaseExtensionUtils extensionUtils) {
         this.sleeper = new Sleeper();
         this.activityUtils = new ActivityUtils(instrumentation, activity, sleeper);
@@ -149,12 +119,35 @@ public class Solo {
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
         this.textEnterer = new TextEnterer(instrumentation, clicker);
         this.viewFetcher.setScroller(this.scroller);
-        this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils) {
-            @Override
-            public final Bitmap takeScreenShot(final Activity activity) {
-                return extensionUtils.takeScreenShot(activity);
-            }
-        };
+        if (extensionUtils != null) {
+            this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils) {
+                @Override
+                public final Bitmap takeScreenShot(final Activity activity) { // leaving room for AndEngine screenshots
+                    return extensionUtils.takeScreenShot(activity);
+                }
+            };
+        } else {
+            this.extUtils = new ExtensionUtils(activity, instrumentation, activityUtils);
+        }
+    }
+
+    public Solo(Instrumentation instrumentation, final BaseExtensionUtils extensionUtils) {
+        this(instrumentation, null, extensionUtils);
+    }
+
+    /**
+     * Constructor that takes in the instrumentation and the start activity.
+     * 
+     * @param instrumentation
+     *            the {@link Instrumentation} instance
+     * @param activity
+     *            the start {@link Activity} or {@code null} if no start activity is provided
+     * 
+     */
+
+    public Solo(Instrumentation instrumentation, Activity activity) {
+        this(instrumentation, activity, null);
+
     }
 
     /**
@@ -166,7 +159,7 @@ public class Solo {
      */
 
     public Solo(Instrumentation instrumentation) {
-        this(instrumentation, null);
+        this(instrumentation, null, null);
     }
 
     /**

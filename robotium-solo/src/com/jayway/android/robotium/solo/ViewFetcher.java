@@ -43,9 +43,7 @@ class ViewFetcher {
      */
 
     public ViewFetcher(ActivityUtils activityUtils) {
-        this.activityUtils = activityUtils;
-        sleeper = new Sleeper();
-        setWindowManagerString();
+        this(activityUtils, new Sleeper());
     }
 
     public void setScroller(final Scroller scroller) {
