@@ -62,7 +62,7 @@ class ViewFetcher {
      */
 
     public View getTopParent(View view) {
-        if (view.getParent() != null && !view.getParent().getClass().getName().equals("android.view.ViewRoot")) {
+        if (view.getParent() != null && view.getParent() instanceof android.view.View) {
             return getTopParent((View) view.getParent());
         } else {
             return view;
