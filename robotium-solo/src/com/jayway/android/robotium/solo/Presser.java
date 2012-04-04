@@ -8,6 +8,7 @@ import android.widget.Spinner;
  * Contains press methods. Examples are pressMenuItem(), pressSpinnerItem().
  * 
  * @author Renas Reda, renas.reda@jayway.com
+ * @modified Michael Shi, mshi@zynga.com
  * 
  */
 

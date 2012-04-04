@@ -1,7 +1,11 @@
 package com.jayway.android.robotium.solo;
 
 import android.app.Instrumentation;
+import android.graphics.RectF;
 import android.text.InputType;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.webkit.WebView;
 import android.widget.EditText;
 
 /**
@@ -13,8 +17,25 @@ import android.widget.EditText;
 
 class TextEnterer {
 
+    private static final String LOG_TAG = "Robotium.TextEnterer";
     private final Instrumentation inst;
     private final Clicker clicker;
+    private final WebViewUtils mWebViewUtils;
+    private final Sleeper mSleeper;
+
+    /**
+     * Construct object
+     * 
+     * @param inst
+     * @param clicker
+     * @param webViewUtils
+     */
+    public TextEnterer(Instrumentation inst, Clicker clicker, WebViewUtils webViewUtils, Sleeper sleeper) {
+        this.inst = inst;
+        this.clicker = clicker;
+        mWebViewUtils = webViewUtils;
+        mSleeper = sleeper;
+    }
 
     /**
      * Constructs this object.
@@ -27,8 +48,7 @@ class TextEnterer {
      */
 
     public TextEnterer(Instrumentation inst, Clicker clicker) {
-        this.inst = inst;
-        this.clicker = clicker;
+        this(inst, clicker, null, new Sleeper());
     }
 
     /**
@@ -80,5 +100,26 @@ class TextEnterer {
             clicker.clickOnScreen(editText, false, 0);
             inst.sendStringSync(text);
         }
+    }
+
+    /**
+     * Type text to whatever is focused.
+     * 
+     * @param text
+     *            text that should be typed
+     */
+    public void typeTextToWebViewElementByName(final WebView webView, final String name, final String text) {
+        final int[] xy = new int[2];
+        final RectF rect = mWebViewUtils.getRectByName(webView, name, 0);
+
+        webView.getLocationOnScreen(xy);
+        Log.i(LOG_TAG, String.format("Location of view: %d, %d", xy[0], xy[1]));
+        clicker.clickOnScreen(rect.centerX() + xy[0], rect.centerY() + xy[1]);
+        Log.i(LOG_TAG, "I CLICKED IT!!!");
+        mSleeper.sleep();
+        inst.sendStringSync(text);
+        mSleeper.sleep();
+        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK); // hide the keyboard
+        mSleeper.sleep();
     }
 }

@@ -6,12 +6,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import android.app.Instrumentation;
+import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.webkit.WebView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -33,12 +35,13 @@ class Clicker {
     private final Sleeper sleeper;
     private final Waiter waiter;
     private final Searcher searcher;
+    private final WebViewUtils mWebViewUtils;
     private final int TIMEOUT = 10000;
     private final int MINISLEEP = 100;
     Set<TextView> uniqueTextViews;
 
     public Clicker(ViewFetcher viewFetcher, Scroller scroller, RobotiumUtils robotiumUtils, Instrumentation inst, Sleeper sleeper, Waiter waiter,
-            Searcher searcher) {
+            Searcher searcher, WebViewUtils webViewUtils) {
         this.viewFetcher = viewFetcher;
         this.scroller = scroller;
         this.robotiumUtils = robotiumUtils;
@@ -46,7 +49,13 @@ class Clicker {
         this.sleeper = sleeper;
         this.waiter = waiter;
         this.searcher = searcher;
+        mWebViewUtils = webViewUtils;
         uniqueTextViews = new HashSet<TextView>();
+    }
+
+    public Clicker(ViewFetcher viewFetcher, Scroller scroller, RobotiumUtils robotiumUtils, Instrumentation inst, Sleeper sleeper, Waiter waiter,
+            Searcher searcher) {
+        this(viewFetcher, scroller, robotiumUtils, inst, sleeper, waiter, searcher, null);
     }
 
     /**
@@ -167,7 +176,7 @@ class Clicker {
         final int viewWidth = view.getWidth();
         final int viewHeight = view.getHeight();
         final float x = xy[0] + (viewWidth / 2.0f);
-        float y = xy[1] + (viewHeight / 2.0f);
+        final float y = xy[1] + (viewHeight / 2.0f);
 
         if (longClick)
             clickLongOnScreen(x, y, time);
@@ -492,5 +501,16 @@ class Clicker {
             Assert.assertTrue(String.format("%s with the text [%s] floating %s is not found !", viewClass.getSimpleName(), nameRegex,
                     (locationOfText == Constants.LOCATION_ABOVE) ? "above" : "below"), false);
         }
+    }
+
+    public void clickOnWebViewElementByName(final WebView webView, final String name) {
+        final int[] xy = new int[2];
+        final RectF rect = mWebViewUtils.getRectByName(webView, name, 0);
+
+        webView.getLocationOnScreen(xy);
+        Log.i(LOG_TAG, String.format("Location of view: %d, %d", xy[0], xy[1]));
+        clickOnScreen(rect.centerX() + xy[0], rect.centerY() + xy[1]);
+        Log.i(LOG_TAG, "I CLICKED IT!!!");
+        sleeper.sleep();
     }
 }

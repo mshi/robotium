@@ -195,7 +195,7 @@ public class ExtensionUtils implements BaseExtensionUtils {
                 e.printStackTrace();
             }
         }
-        Log.e(LOG_TAG, String.format("%s. Current activity: ", msg, mActivityUtils.getCurrentActivity().toString()));
+        Log.e(LOG_TAG, String.format("%s. Current activity: %s", msg, mActivityUtils.getCurrentActivity().toString()));
         Assert.fail(msg);
     }
 }

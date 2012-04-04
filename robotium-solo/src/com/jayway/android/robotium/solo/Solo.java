@@ -14,6 +14,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -87,6 +88,7 @@ public class Solo {
     private final Setter setter;
     private final Getter getter;
     private final ExtensionUtils extUtils;
+    private final WebViewUtils webViewUtils;
     private final static int TIMEOUT = 20000;
     private final static int SMALLTIMEOUT = 10000;
     private final static String LOG_TAG = "Robotium";
@@ -128,9 +130,10 @@ public class Solo {
         this.asserter = new Asserter(activityUtils, waiter);
         this.checker = new Checker(viewFetcher, waiter);
         this.robotiumUtils = new RobotiumUtils(instrumentation, sleeper);
-        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher);
+        this.webViewUtils = new WebViewUtils(activityUtils);
+        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher, webViewUtils);
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
-        this.textEnterer = new TextEnterer(instrumentation, clicker);
+        this.textEnterer = new TextEnterer(instrumentation, clicker, webViewUtils, sleeper);
         this.viewFetcher.setScroller(this.scroller);
     }
 
@@ -2407,5 +2410,13 @@ public class Solo {
 
     public void fail(String msg, boolean screenshot, String name) {
         extUtils.fail(msg, screenshot, name);
+    }
+
+    public void typeTextIntoWebViewElementByName(final WebView webView, final String name, final String text) {
+        textEnterer.typeTextToWebViewElementByName(webView, name, text);
+    }
+
+    public void clickOnWebViewElementByName(final WebView webView, final String name) {
+        clicker.clickOnWebViewElementByName(webView, name);
     }
 }
