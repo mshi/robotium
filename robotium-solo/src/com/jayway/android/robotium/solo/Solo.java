@@ -88,7 +88,7 @@ public class Solo {
     private final Setter setter;
     private final Getter getter;
     private final ExtensionUtils extUtils;
-    private final WebViewUtils webViewUtils;
+    private final WebViewUtils mWebViewUtils;
     private final static int TIMEOUT = 20000;
     private final static int SMALLTIMEOUT = 10000;
     private final static String LOG_TAG = "Robotium";
@@ -130,10 +130,10 @@ public class Solo {
         this.asserter = new Asserter(activityUtils, waiter);
         this.checker = new Checker(viewFetcher, waiter);
         this.robotiumUtils = new RobotiumUtils(instrumentation, sleeper);
-        this.webViewUtils = new WebViewUtils(activityUtils);
-        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher, webViewUtils);
+        this.mWebViewUtils = new WebViewUtils(activityUtils);
+        this.clicker = new Clicker(viewFetcher, scroller, robotiumUtils, instrumentation, sleeper, waiter, searcher, mWebViewUtils);
         this.presser = new Presser(clicker, instrumentation, sleeper, waiter);
-        this.textEnterer = new TextEnterer(instrumentation, clicker, webViewUtils, sleeper);
+        this.textEnterer = new TextEnterer(instrumentation, clicker, mWebViewUtils, sleeper);
         this.viewFetcher.setScroller(this.scroller);
     }
 
@@ -2418,5 +2418,9 @@ public class Solo {
 
     public void clickOnWebViewElementByName(final WebView webView, final String name) {
         clicker.clickOnWebViewElementByName(webView, name);
+    }
+
+    public void endWebViewInteractionSession() {
+        mWebViewUtils.endSession();
     }
 }

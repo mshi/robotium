@@ -21,42 +21,58 @@ public final class WebViewUtils {
     private static final String LOG_TAG = "Robotium.WebViewUtils";
     private static String mWebReturnVal;
     private final static Object locker = new Object();
+    private WebView mWebView = null;
+    private boolean mInitialized = false;
 
     public WebViewUtils(ActivityUtils activityUtils) {
         mActivityUtils = activityUtils;
     }
 
+    public void endSession() {
+        mInitialized = false;
+        mWebView = null;
+    }
+
     public void processJavascript(final WebView view, final String args) {
         final SynchronousJavascriptInterface jsInterface = new SynchronousJavascriptInterface();
+        if (mWebView == null) {
+            mWebView = view;
+        }
 
         mActivityUtils.getCurrentActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                final boolean oldSettings = view.getSettings().getJavaScriptEnabled();
+                final boolean oldSettings = mWebView.getSettings().getJavaScriptEnabled();
                 Log.i(LOG_TAG, "Javascript enabled: " + oldSettings);
                 if (!oldSettings) {
-                    view.getSettings().setJavaScriptEnabled(true);
+                    mWebView.getSettings().setJavaScriptEnabled(true);
                     Log.i(LOG_TAG, "Javascript enabled.");
                 }
 
-                view.addJavascriptInterface(jsInterface, jsInterface.getInterfaceName());
-
-                view.setWebViewClient(new WebViewClient() {
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        super.onPageFinished(view, url);
-                        mWebReturnVal = jsInterface.getJSValue(view, args);
-                        synchronized (locker) {
-                            locker.notify();
+                if (!mInitialized) {
+                    mWebView.addJavascriptInterface(jsInterface, jsInterface.getInterfaceName());
+                    mWebView.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public void onPageFinished(WebView wView, String url) {
+                            super.onPageFinished(wView, url);
+                            mWebReturnVal = jsInterface.getJSValue(wView, args);
+                            synchronized (locker) {
+                                locker.notify();
+                            }
+                            if (!oldSettings) {
+                                wView.getSettings().setJavaScriptEnabled(false);
+                                Log.i(LOG_TAG, "Javascript reverted back to disabled.");
+                            }
                         }
-                        if (!oldSettings) {
-                            view.getSettings().setJavaScriptEnabled(false);
-                            Log.i(LOG_TAG, "Javascript reverted back to disabled.");
-                        }
+                    });
+                    mWebView.reload();
+                    mInitialized = true;
+                } else {
+                    mWebReturnVal = jsInterface.getJSValue(mWebView, args);
+                    synchronized (locker) {
+                        locker.notify();
                     }
-                });
-
-                view.reload();
+                }
             }
         });
 
@@ -110,17 +126,17 @@ public final class WebViewUtils {
      * @author Michael Shi, mshi@zynga.com
      * 
      */
-    private final class SynchronousJavascriptInterface {
+    private final static class SynchronousJavascriptInterface {
 
         private static final String LOG_TAG = "Robotium.SynchronousJavascriptInterface";
 
         /** The Javascript interface name for adding to web view. */
         private final static String INTERFACE_NAME = "SynchronousJS";
 
-        private final Object locker = new Object();
+        private final static Object pLocker = new Object();
 
         /** Return value to wait for. */
-        private String returnValue;
+        private static String returnValue;
 
         public SynchronousJavascriptInterface() {
         }
@@ -138,8 +154,8 @@ public final class WebViewUtils {
             String code = String.format("javascript:%s.setValue((function(){try{return %s+\"\";}catch(err){return err;}})());", INTERFACE_NAME, expression);
             try {
                 webView.loadUrl(code);
-                synchronized (locker) {
-                    locker.wait(2000);
+                synchronized (pLocker) {
+                    pLocker.wait(1000);
                 }
                 return returnValue;
             } catch (InterruptedException e) {
@@ -156,10 +172,10 @@ public final class WebViewUtils {
          */
         @SuppressWarnings("unused")
         public void setValue(String value) {
-            Log.i(LOG_TAG, "setValue called");
-            returnValue = value;
-            synchronized (locker) {
-                locker.notify();
+            Log.i(LOG_TAG, "setValue called. Valued received: " + value);
+            synchronized (pLocker) {
+                returnValue = value;
+                pLocker.notify();
             }
         }
 
