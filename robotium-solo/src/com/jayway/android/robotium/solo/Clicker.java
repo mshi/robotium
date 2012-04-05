@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -503,9 +504,9 @@ class Clicker {
         }
     }
 
-    public void clickOnWebViewElementByName(final WebView webView, final String name) {
+    public void clickOnWebViewElementByName(final WebView webView, final String name, final WebViewClient customClient) {
         final int[] xy = new int[2];
-        final RectF rect = mWebViewUtils.getRectByName(webView, name, 0);
+        final RectF rect = mWebViewUtils.getRectByName(webView, name, 0, customClient);
 
         webView.getLocationOnScreen(xy);
         Log.i(LOG_TAG, String.format("Location of view: %d, %d", xy[0], xy[1]));

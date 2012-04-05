@@ -6,6 +6,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 
 /**
@@ -108,9 +109,10 @@ class TextEnterer {
      * @param text
      *            text that should be typed
      */
-    public void typeTextToWebViewElementByName(final WebView webView, final String name, final String text) {
+
+    public void typeTextToWebViewElementByName(final WebView webView, final String name, final String text, final WebViewClient customClient) {
         final int[] xy = new int[2];
-        final RectF rect = mWebViewUtils.getRectByName(webView, name, 0);
+        final RectF rect = mWebViewUtils.getRectByName(webView, name, 0, customClient);
 
         webView.getLocationOnScreen(xy);
         Log.i(LOG_TAG, String.format("Location of view: %d, %d", xy[0], xy[1]));

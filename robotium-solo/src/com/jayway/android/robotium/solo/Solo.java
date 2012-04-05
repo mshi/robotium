@@ -15,6 +15,7 @@ import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -2412,12 +2413,20 @@ public class Solo {
         extUtils.fail(msg, screenshot, name);
     }
 
+    public void typeTextIntoWebViewElementByName(final WebView webView, final String name, final String text, final WebViewClient customClient) {
+        textEnterer.typeTextToWebViewElementByName(webView, name, text, customClient);
+    }
+
     public void typeTextIntoWebViewElementByName(final WebView webView, final String name, final String text) {
-        textEnterer.typeTextToWebViewElementByName(webView, name, text);
+        textEnterer.typeTextToWebViewElementByName(webView, name, text, WebViewUtils.DEFAULT_CLIENT);
+    }
+
+    public void clickOnWebViewElementByName(final WebView webView, final String name, final WebViewClient customClient) {
+        clicker.clickOnWebViewElementByName(webView, name, customClient);
     }
 
     public void clickOnWebViewElementByName(final WebView webView, final String name) {
-        clicker.clickOnWebViewElementByName(webView, name);
+        clicker.clickOnWebViewElementByName(webView, name, WebViewUtils.DEFAULT_CLIENT);
     }
 
     public void endWebViewInteractionSession() {

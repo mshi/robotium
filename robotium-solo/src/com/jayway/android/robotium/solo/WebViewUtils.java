@@ -1,8 +1,14 @@
 package com.jayway.android.robotium.solo;
 
+import android.graphics.Bitmap;
 import android.graphics.RectF;
+import android.net.http.SslError;
+import android.os.Message;
 import android.util.Log;
 import android.util.Pair;
+import android.view.KeyEvent;
+import android.webkit.HttpAuthHandler;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -23,6 +29,7 @@ public final class WebViewUtils {
     private final static Object locker = new Object();
     private WebView mWebView = null;
     private boolean mInitialized = false;
+    public static final WebViewClient DEFAULT_CLIENT = new WebViewClient();
 
     public WebViewUtils(ActivityUtils activityUtils) {
         mActivityUtils = activityUtils;
@@ -33,10 +40,10 @@ public final class WebViewUtils {
         mWebView = null;
     }
 
-    public void processJavascript(final WebView view, final String args) {
+    public void processJavascript(final WebView webView, final String args, final WebViewClient customClient) {
         final SynchronousJavascriptInterface jsInterface = new SynchronousJavascriptInterface();
         if (mWebView == null) {
-            mWebView = view;
+            mWebView = webView;
         }
 
         mActivityUtils.getCurrentActivity().runOnUiThread(new Runnable() {
@@ -51,20 +58,77 @@ public final class WebViewUtils {
 
                 if (!mInitialized) {
                     mWebView.addJavascriptInterface(jsInterface, jsInterface.getInterfaceName());
+
                     mWebView.setWebViewClient(new WebViewClient() {
                         @Override
-                        public void onPageFinished(WebView wView, String url) {
-                            super.onPageFinished(wView, url);
-                            mWebReturnVal = jsInterface.getJSValue(wView, args);
+                        public void onFormResubmission(WebView view, Message dontResend, Message resend) {
+                            customClient.onFormResubmission(view, dontResend, resend);
+                        }
+
+                        @Override
+                        public void onLoadResource(WebView view, String url) {
+                            customClient.onLoadResource(view, url);
+                        }
+
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            customClient.onPageFinished(view, url);
+                            mWebReturnVal = jsInterface.getJSValue(view, args);
                             synchronized (locker) {
                                 locker.notify();
                             }
                             if (!oldSettings) {
-                                wView.getSettings().setJavaScriptEnabled(false);
+                                view.getSettings().setJavaScriptEnabled(false);
                                 Log.i(LOG_TAG, "Javascript reverted back to disabled.");
                             }
                         }
+
+                        @Override
+                        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                            customClient.onPageStarted(view, url, favicon);
+                        }
+
+                        @Override
+                        public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                            customClient.onReceivedError(view, errorCode, description, failingUrl);
+                        }
+
+                        @Override
+                        public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
+                            customClient.onReceivedHttpAuthRequest(view, handler, host, realm);
+                        }
+
+                        @Override
+                        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                            customClient.onReceivedSslError(view, handler, error);
+                        }
+                        @Override
+                        public void onScaleChanged(WebView view, float oldScale, float newScale) {
+                            customClient.onScaleChanged(view, oldScale, newScale);
+                        }
+                        @Override
+                        public void onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg) {
+                            customClient.onTooManyRedirects(view, cancelMsg, continueMsg);
+                        }
+                        @Override
+                        public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
+                            customClient.onUnhandledKeyEvent(view, event);
+                        }
+                        @Override
+                        public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
+                            return customClient.shouldOverrideKeyEvent(view, event);
+                        }
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                            return customClient.shouldOverrideUrlLoading(view, url);
+                        }
+                        @Override
+                        public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                            customClient.doUpdateVisitedHistory(view, url, isReload);
+                        }
+
                     });
+
                     mWebView.reload();
                     mInitialized = true;
                 } else {
@@ -84,13 +148,12 @@ public final class WebViewUtils {
             }
         }
     }
-
     public final Pair<Float, Float> getCoordinatesByName(final WebView view, final String name) {
-        return getCoordinatesByName(view, name, 0);
+        return getCoordinatesByName(view, name, 0, DEFAULT_CLIENT);
     }
 
-    public final Pair<Float, Float> getCoordinatesByName(final WebView view, final String name, final int index) {
-        processJavascript(view, String.format("%s(document.getElementsByName('%s')[%d])", GET_POS_FUNCTION, name, index));
+    public final Pair<Float, Float> getCoordinatesByName(final WebView view, final String name, final int index, final WebViewClient customClient) {
+        processJavascript(view, String.format("%s(document.getElementsByName('%s')[%d])", GET_POS_FUNCTION, name, index), customClient);
 
         Assert.assertNotNull(mWebReturnVal);
 
@@ -101,11 +164,11 @@ public final class WebViewUtils {
     }
 
     public final RectF getRectByName(final WebView view, final String name) {
-        return getRectByName(view, name, 0);
+        return getRectByName(view, name, 0, DEFAULT_CLIENT);
     }
 
-    public final RectF getRectByName(final WebView view, final String name, final int index) {
-        processJavascript(view, String.format("%s(document.getElementsByName('%s')[%d])", GET_RECT_FUNCTION, name, index));
+    public final RectF getRectByName(final WebView view, final String name, final int index, final WebViewClient customClient) {
+        processJavascript(view, String.format("%s(document.getElementsByName('%s')[%d])", GET_RECT_FUNCTION, name, index), customClient);
         Assert.assertNotNull(mWebReturnVal);
 
         Log.i(LOG_TAG, mWebReturnVal);
