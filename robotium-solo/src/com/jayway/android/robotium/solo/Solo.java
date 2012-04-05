@@ -1745,6 +1745,17 @@ public class Solo {
     }
 
     /**
+     * Returns an {@code ArrayList} of current View objects of specific type
+     * 
+     * @param viewClass
+     *            type of view class to return
+     * @return {@link ArrayList} that contains all the current views of type {@code viewClass}
+     */
+    public <T extends View> ArrayList<T> getCurrentViews(Class<T> viewClass) {
+        return viewFetcher.getCurrentViews(viewClass);
+    }
+
+    /**
      * Returns an ArrayList of the ImageView objects currently shown in the focused Activity or Dialog.
      * 
      * @return an {@code ArrayList} of the {@link ImageView} objects currently shown in the focused window
